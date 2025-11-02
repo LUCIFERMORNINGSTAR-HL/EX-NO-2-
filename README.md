@@ -35,9 +35,127 @@ STEP-5: Display the obtained cipher text.
 
 
 Program:
+```c
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 
+char keyTable[5][5];
+
+// Function to remove duplicate letters from key and create key table
+void createKeyTable(char key[]) {
+    int seen[26] = {0}; // To mark used letters
+    int row = 0, col = 0;
+
+    for (int i = 0; key[i] != '\0'; i++) {
+        char ch = toupper(key[i]);
+        if (ch == 'J') ch = 'I';
+        if (ch < 'A' || ch > 'Z') continue;
+
+        if (!seen[ch - 'A']) {
+            keyTable[row][col++] = ch;
+            seen[ch - 'A'] = 1;
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+
+    for (char ch = 'A'; ch <= 'Z'; ch++) {
+        if (ch == 'J') continue;
+        if (!seen[ch - 'A']) {
+            keyTable[row][col++] = ch;
+            if (col == 5) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+}
+
+// Function to find position of a letter in key table
+void findPosition(char ch, int *row, int *col) {
+    if (ch == 'J') ch = 'I';
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            if (keyTable[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+// Encrypt function
+void encryptPlayfair(char text[]) {
+    int len = strlen(text);
+    char cipher[100];
+    int k = 0;
+
+    // Prepare text in pairs
+    for (int i = 0; i < len; i++) {
+        char a = toupper(text[i]);
+        if (a == 'J') a = 'I';
+        if (a < 'A' || a > 'Z') continue;
+
+        char b;
+        if (i + 1 < len) {
+            b = toupper(text[i + 1]);
+            if (b == 'J') b = 'I';
+        } else b = 'X';
+
+        if (a == b) b = 'X';
+        else i++;
+
+        int r1, c1, r2, c2;
+        findPosition(a, &r1, &c1);
+        findPosition(b, &r2, &c2);
+
+        if (r1 == r2) { // same row
+            cipher[k++] = keyTable[r1][(c1 + 1) % 5];
+            cipher[k++] = keyTable[r2][(c2 + 1) % 5];
+        } else if (c1 == c2) { // same column
+            cipher[k++] = keyTable[(r1 + 1) % 5][c1];
+            cipher[k++] = keyTable[(r2 + 1) % 5][c2];
+        } else { // rectangle
+            cipher[k++] = keyTable[r1][c2];
+            cipher[k++] = keyTable[r2][c1];
+        }
+    }
+    cipher[k] = '\0';
+
+    printf("Encrypted Text: %s\n", cipher);
+}
+
+int main() {
+    char key[50], text[100];
+
+    printf("Enter the keyword: ");
+    scanf("%s", key);
+
+    printf("Enter the plaintext: ");
+    scanf("%s", text);
+
+    createKeyTable(key);
+
+    printf("\n5x5 Key Table:\n");
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
+            printf("%c ", keyTable[i][j]);
+        }
+        printf("\n");
+    }
+
+    encryptPlayfair(text);
+
+    return 0;
+}
+```
 
 
 
 
 Output:
+<img width="1808" height="947" alt="Screenshot 2025-11-02 140818" src="https://github.com/user-attachments/assets/218e7ba9-7ed6-44d2-9c5a-b423c35ca6d8" />
